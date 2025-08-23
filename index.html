@@ -190,6 +190,13 @@
             color: var(--primary-color);
         }
 
+        .message-receiver {
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #a0a0a0;
+        }
+
         .message-time {
             font-size: 0.7rem;
             color: #a0a0a0;
@@ -562,8 +569,8 @@
     </div>
 
     <script>
-        // Server URL
-        const SERVER_URL = "https://chat-app-o7w8.onrender.com";
+        // Server URL - Updated
+        const SERVER_URL = "https://chat-app-tash.onrender.com";
         
         // Global state
         let currentUser = null;
@@ -845,12 +852,11 @@
                 const isOutgoing = message.sender_id === currentUser.user_id;
                 messageEl.className = `message ${isOutgoing ? 'message-out' : 'message-in'}`;
                 
-                if (!isOutgoing) {
-                    const sender = document.createElement('div');
-                    sender.className = 'message-sender';
-                    sender.textContent = currentChat.username;
-                    messageEl.appendChild(sender);
-                }
+                // Show sender and receiver information
+                const senderInfo = document.createElement('div');
+                senderInfo.className = 'message-sender';
+                senderInfo.textContent = `${message.sender_username} → ${findUsername(message.receiver_id)}`;
+                messageEl.appendChild(senderInfo);
                 
                 const text = document.createElement('div');
                 text.className = 'message-text';
@@ -867,6 +873,12 @@
             
             // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function findUsername(user_id) {
+            if (currentUser && user_id === currentUser.user_id) return currentUser.username;
+            const contact = contacts.find(c => c.user_id === user_id);
+            return contact ? contact.username : user_id;
         }
         
         function formatMessageTime(timestamp) {
@@ -1109,12 +1121,6 @@
             } catch (error) {
                 console.error('Error loading all messages:', error);
             }
-        }
-        
-        function findUsername(user_id) {
-            if (currentUser && user_id === currentUser.user_id) return currentUser.username;
-            const contact = contacts.find(c => c.user_id === user_id);
-            return contact ? contact.username : user_id;
         }
         
         async function banIP() {
