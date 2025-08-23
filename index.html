@@ -1,1185 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHSSS Chat</title>
-    <style>
-        :root {
-            --primary-color: #8774e1;
-            --bg-color: #0f0f0f;
-            --secondary-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --border-color: #2d2d2d;
-            --message-out-bg: #2b5278;
-            --message-in-bg: #182533;
-            --hover-color: #2a2a2a;
-            --shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            --header-height: 60px;
-            --input-height: 60px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .header {
-            height: var(--header-height);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 15px;
-            background-color: var(--secondary-bg);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .logo {
-            font-weight: bold;
-            color: var(--primary-color);
-            font-size: 1.2rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        .header-button {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .sidebar {
-            width: 350px;
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .search-container {
-            padding: 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 10px 15px;
-            border-radius: 18px;
-            border: none;
-            background-color: var(--hover-color);
-            color: var(--text-color);
-        }
-
-        .contacts-list {
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .contact {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .contact:hover, .contact.active {
-            background-color: var(--hover-color);
-        }
-
-        .contact-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            margin-right: 12px;
-            background-color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .contact-info {
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .contact-name {
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        .contact-preview {
-            font-size: 0.85rem;
-            color: #a0a0a0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-header {
-            height: var(--header-height);
-            padding: 0 15px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            background-color: var(--secondary-bg);
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-color);
-        }
-
-        .message {
-            max-width: 70%;
-            padding: 8px 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            position: relative;
-        }
-
-        .message-out {
-            align-self: flex-end;
-            background-color: var(--message-out-bg);
-        }
-
-        .message-in {
-            align-self: flex-start;
-            background-color: var(--message-in-bg);
-        }
-
-        .message-sender {
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-bottom: 4px;
-            color: var(--primary-color);
-        }
-
-        .message-receiver {
-            font-size: 0.75rem;
-            font-weight: bold;
-            margin-bottom: 4px;
-            color: #a0a0a0;
-        }
-
-        .message-time {
-            font-size: 0.7rem;
-            color: #a0a0a0;
-            text-align: right;
-            margin-top: 4px;
-        }
-
-        .chat-input-container {
-            height: var(--input-height);
-            padding: 10px 15px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            background-color: var(--secondary-bg);
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 20px;
-            border: none;
-            background-color: var(--hover-color);
-            color: var(--text-color);
-        }
-
-        .send-button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            margin-left: 10px;
-            cursor: pointer;
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background-color: var(--secondary-bg);
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: var(--shadow);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .close-button {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-            color: #a0a0a0;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background-color: var(--hover-color);
-            color: var(--text-color);
-        }
-
-        .form-button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        .secondary-button {
-            background-color: var(--hover-color);
-            color: var(--text-color);
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .profile-container {
-            padding: 15px;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0 auto 15px;
-        }
-
-        .admin-section {
-            border-top: 1px solid var(--border-color);
-            margin-top: 20px;
-            padding-top: 20px;
-        }
-
-        .admin-panel {
-            padding: 15px;
-            overflow-y: auto;
-            max-height: 400px;
-        }
-
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-            font-size: 0.9rem;
-        }
-
-        .admin-table th, .admin-table td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .admin-button {
-            padding: 5px 10px;
-            background-color: #e53935;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        .tab-container {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 15px;
-        }
-
-        .tab {
-            padding: 8px 15px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .tab.active {
-            border-bottom: 2px solid var(--primary-color);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #a0a0a0;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                display: none;
-            }
-            
-            .sidebar.active {
-                display: flex;
-            }
-            
-            .chat-container {
-                display: none;
-            }
-            
-            .chat-container.active {
-                display: flex;
-            }
-            
-            .back-button {
-                background: none;
-                border: none;
-                color: var(--text-color);
-                cursor: pointer;
-                margin-right: 10px;
-                display: block;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHSSS Chat</title>
+<style>
+:root {
+    --primary-color: #8774e1;
+    --bg-color: #0f0f0f;
+    --secondary-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --border-color: #2d2d2d;
+    --message-out-bg: #2b5278;
+    --message-in-bg: #182533;
+    --hover-color: #2a2a2a;
+    --shadow: 0 2px 5px rgba(0,0,0,0.3);
+    --header-height: 60px;
+    --input-height: 60px;
+}
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-color); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+.header { height: var(--header-height); display:flex; justify-content:space-between; align-items:center; padding:0 15px; background-color:var(--secondary-bg); border-bottom:1px solid var(--border-color); }
+.logo { font-weight:bold; color: var(--primary-color); font-size:1.2rem; }
+.header-actions { display:flex; gap:15px; }
+.header-button { background:none; border:none; color: var(--text-color); cursor:pointer; font-size:1.2rem; }
+.container { display:flex; flex:1; overflow:hidden; }
+.sidebar { width:350px; border-right:1px solid var(--border-color); display:flex; flex-direction:column; overflow:hidden; }
+.search-container { padding:10px; border-bottom:1px solid var(--border-color); }
+.search-input { width:100%; padding:10px 15px; border-radius:18px; border:none; background-color: var(--hover-color); color: var(--text-color); }
+.contacts-list { overflow-y:auto; flex:1; }
+.contact { display:flex; align-items:center; padding:12px 15px; cursor:pointer; border-bottom:1px solid var(--border-color); }
+.contact:hover, .contact.active { background-color: var(--hover-color); }
+.contact-avatar { width:45px; height:45px; border-radius:50%; margin-right:12px; background-color: var(--primary-color); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:18px; }
+.contact-info { flex:1; overflow:hidden; }
+.contact-name { font-weight:bold; margin-bottom:4px; }
+.contact-preview { font-size:0.85rem; color:#a0a0a0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-container { flex:1; display:flex; flex-direction:column; }
+.chat-header { height:var(--header-height); padding:0 15px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; background-color: var(--secondary-bg); }
+.chat-messages { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; background-color: var(--bg-color); }
+.message { max-width:70%; padding:8px 12px; margin-bottom:10px; border-radius:8px; position:relative; }
+.message-out { align-self:flex-end; background-color: var(--message-out-bg); }
+.message-in { align-self:flex-start; background-color: var(--message-in-bg); }
+.message-sender { font-size:0.75rem; font-weight:bold; margin-bottom:4px; color:var(--primary-color); }
+.message-time { font-size:0.7rem; color:#a0a0a0; text-align:right; margin-top:4px; }
+.chat-input-container { height:var(--input-height); padding:10px 15px; border-top:1px solid var(--border-color); display:flex; align-items:center; background-color: var(--secondary-bg); }
+.chat-input { flex:1; padding:12px 15px; border-radius:20px; border:none; background-color: var(--hover-color); color: var(--text-color); }
+.send-button { background-color: var(--primary-color); color:white; border:none; border-radius:50%; width:40px; height:40px; margin-left:10px; cursor:pointer; }
+.modal { position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.modal-content { background-color: var(--secondary-bg); padding:20px; border-radius:8px; width:90%; max-width:400px; box-shadow: var(--shadow); }
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+.close-button { background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--text-color); }
+.form-group { margin-bottom:15px; }
+.form-label { display:block; margin-bottom:5px; font-size:0.9rem; color:#a0a0a0; }
+.form-input { width:100%; padding:10px; border-radius:4px; border:1px solid var(--border-color); background-color: var(--hover-color); color: var(--text-color); }
+.form-button { width:100%; padding:12px; background-color: var(--primary-color); color:white; border:none; border-radius:4px; cursor:pointer; margin-top:10px; font-weight:bold; }
+.secondary-button { background-color: var(--hover-color); color: var(--text-color); }
+.hidden { display:none; }
+.profile-container { padding:15px; }
+.profile-avatar { width:80px; height:80px; border-radius:50%; background-color: var(--primary-color); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; margin:0 auto 15px; }
+.admin-section { border-top:1px solid var(--border-color); margin-top:20px; padding-top:20px; }
+.admin-panel { padding:15px; overflow-y:auto; max-height:400px; }
+.admin-table { width:100%; border-collapse:collapse; margin:10px 0; font-size:0.9rem; }
+.admin-table th, .admin-table td { padding:8px; text-align:left; border-bottom:1px solid var(--border-color); }
+.admin-button { padding:5px 10px; background-color:#e53935; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; }
+.tab-container { display:flex; border-bottom:1px solid var(--border-color); margin-bottom:15px; }
+.tab { padding:8px 15px; cursor:pointer; font-size:0.9rem; }
+.tab.active { border-bottom:2px solid var(--primary-color); }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+.empty-state { text-align:center; padding:30px; color:#a0a0a0; }
+</style>
 </head>
 <body>
-    <!-- Auth Modal -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="authModalTitle">Login</h2>
-                <button class="close-button" onclick="hideAuthModal()">&times;</button>
-            </div>
-            <div class="tab-container">
-                <div class="tab active" onclick="switchAuthTab('login')">Login</div>
-                <div class="tab" onclick="switchAuthTab('signup')">Sign Up</div>
-            </div>
-            <div id="loginTab" class="tab-content active">
-                <div class="form-group">
-                    <label class="form-label" for="loginUsername">Username</label>
-                    <input type="text" id="loginUsername" class="form-input" placeholder="Enter your username">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password">
-                </div>
-                <button class="form-button" onclick="login()">Login</button>
-            </div>
-            <div id="signupTab" class="tab-content">
-                <div class="form-group">
-                    <label class="form-label" for="signupUsername">Username</label>
-                    <input type="text" id="signupUsername" class="form-input" placeholder="Choose a username">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" class="form-input" placeholder="Choose a password">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="signupProfileImage">Profile Image URL (optional)</label>
-                    <input type="text" id="signupProfileImage" class="form-input" placeholder="URL for your profile image">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="signupAbout">About (optional)</label>
-                    <input type="text" id="signupAbout" class="form-input" placeholder="Tell something about yourself">
-                </div>
-                <button class="form-button" onclick="signup()">Sign Up</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Settings</h2>
-                <button class="close-button" onclick="hideSettingsModal()">&times;</button>
-            </div>
-            <div class="profile-container">
-                <div class="profile-avatar" id="settingsAvatar">U</div>
-                <div class="form-group">
-                    <label class="form-label" for="settingsProfileImage">Profile Image URL</label>
-                    <input type="text" id="settingsProfileImage" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="settingsAbout">About</label>
-                    <input type="text" id="settingsAbout" class="form-input">
-                </div>
-                <button class="form-button" onclick="updateProfile()">Update Profile</button>
-                
-                <div id="adminSection" class="admin-section hidden">
-                    <h3>Admin Panel</h3>
-                    <div class="tab-container">
-                        <div class="tab active" onclick="switchAdminTab('users')">Users</div>
-                        <div class="tab" onclick="switchAdminTab('messages')">All Messages</div>
-                        <div class="tab" onclick="switchAdminTab('ban')">Ban IP</div>
-                    </div>
-                    
-                    <div id="adminUsersTab" class="tab-content active">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>IP</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminUsersList">
-                                <!-- Users will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div id="adminMessagesTab" class="tab-content">
-                        <div id="adminMessagesList" class="admin-panel">
-                            <!-- All messages will be populated here -->
-                        </div>
-                    </div>
-                    
-                    <div id="adminBanTab" class="tab-content">
-                        <div class="form-group">
-                            <label class="form-label" for="banIP">IP Address</label>
-                            <input type="text" id="banIP" class="form-input" placeholder="Enter IP to ban">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="banReason">Reason (optional)</label>
-                            <input type="text" id="banReason" class="form-input" placeholder="Reason for ban">
-                        </div>
-                        <button class="form-button" onclick="banIP()">Ban IP</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Auth Modal -->
+<div id="authModal" class="modal">
+<div class="modal-content">
+<div class="modal-header">
+<h2 id="authModalTitle">Login</h2>
+<button class="close-button" onclick="hideAuthModal()">&times;</button>
+</div>
+<div class="tab-container">
+<div class="tab active" onclick="switchAuthTab('login')">Login</div>
+<div class="tab" onclick="switchAuthTab('signup')">Sign Up</div>
+</div>
+<div id="loginTab" class="tab-content active">
+<div class="form-group">
+<label class="form-label" for="loginUsername">Username</label>
+<input type="text" id="loginUsername" class="form-input" placeholder="Enter your username">
+</div>
+<div class="form-group">
+<label class="form-label" for="loginPassword">Password</label>
+<input type="password" id="loginPassword" class="form-input" placeholder="Enter your password">
+</div>
+<div id="loginError" style="color:#e53935;margin-bottom:10px;"></div>
+<button class="form-button" onclick="login()">Login</button>
+</div>
+<div id="signupTab" class="tab-content">
+<div class="form-group">
+<label class="form-label" for="signupUsername">Username</label>
+<input type="text" id="signupUsername" class="form-input" placeholder="Choose a username">
+</div>
+<div class="form-group">
+<label class="form-label" for="signupPassword">Password</label>
+<input type="password" id="signupPassword" class="form-input" placeholder="Choose a password">
+</div>
+<div class="form-group">
+<label class="form-label" for="signupProfileImage">Profile Image URL (optional)</label>
+<input type="text" id="signupProfileImage" class="form-input" placeholder="URL for your profile image">
+</div>
+<div class="form-group">
+<label class="form-label" for="signupAbout">About (optional)</label>
+<input type="text" id="signupAbout" class="form-input" placeholder="Tell something about yourself">
+</div>
+<button class="form-button" onclick="signup()">Sign Up</button>
+</div>
+</div>
+</div>
 
-    <!-- Main App Interface -->
-    <div class="header">
-        <button class="back-button" style="display: none;" onclick="goBack()">←</button>
-        <div class="logo">SHSSS CHAT</div>
-        <div class="header-actions">
-            <button class="header-button" onclick="showSettingsModal()">⚙️</button>
-            <button class="header-button" onclick="logout()">🚪</button>
-        </div>
-    </div>
+<!-- Settings / Admin Modal -->
+<div id="settingsModal" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h2>Settings</h2>
+<button class="close-button" onclick="hideSettingsModal()">&times;</button>
+</div>
+<div class="profile-container">
+<div class="profile-avatar" id="settingsAvatar">U</div>
+<div class="form-group">
+<label class="form-label" for="settingsProfileImage">Profile Image URL</label>
+<input type="text" id="settingsProfileImage" class="form-input">
+</div>
+<div class="form-group">
+<label class="form-label" for="settingsAbout">About</label>
+<input type="text" id="settingsAbout" class="form-input">
+</div>
+<button class="form-button" onclick="updateProfile()">Update Profile</button>
 
-    <div class="container">
-        <div class="sidebar active">
-            <div class="search-container">
-                <input type="text" class="search-input" placeholder="Search" id="searchInput">
-            </div>
-            <div class="contacts-list" id="contactsList">
-                <!-- Contacts will be populated here -->
-            </div>
-        </div>
+<div id="adminSection" class="admin-section hidden">
+<h3>Admin Panel</h3>
+<div class="tab-container">
+<div class="tab active" onclick="switchAdminTab('users')">Users</div>
+<div class="tab" onclick="switchAdminTab('messages')">All Messages</div>
+<div class="tab" onclick="switchAdminTab('ban')">Ban/Unban IP</div>
+</div>
 
-        <div class="chat-container">
-            <div class="chat-header">
-                <div id="currentChatName">Select a chat</div>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="empty-state">
-                    Select a chat to start messaging
-                </div>
-            </div>
-            <div class="chat-input-container">
-                <input type="text" class="chat-input" placeholder="Type a message..." id="messageInput">
-                <button class="send-button" onclick="sendMessage()">➤</button>
-            </div>
-        </div>
-    </div>
+<div id="adminUsersTab" class="tab-content active">
+<table class="admin-table">
+<thead><tr><th>Username</th><th>IP</th><th>Action</th></tr></thead>
+<tbody id="adminUsersList"></tbody>
+</table>
+</div>
 
-    <script>
-        // Server URL - Updated
-        const SERVER_URL = "https://chat-app-tash.onrender.com";
-        
-        // Global state
-        let currentUser = null;
-        let currentChat = null;
-        let contacts = [];
-        let messages = {};
-        let isAdmin = false;
-        
-        // Initialize the app
-        function init() {
-            // Check if user is logged in
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                loadContacts();
-                startMessagePolling();
-            } else {
-                showAuthModal();
-            }
-            
-            // Check if user is admin
-            if (currentUser && currentUser.username === "Ryuk") {
-                isAdmin = true;
-            }
-        }
-        
-        // Authentication functions
-        function showAuthModal() {
-            document.getElementById('authModal').classList.remove('hidden');
-        }
-        
-        function hideAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-        }
-        
-        function switchAuthTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
-            if (tab === 'login') {
-                document.querySelector('.tab:first-child').classList.add('active');
-                document.getElementById('loginTab').classList.add('active');
-                document.getElementById('authModalTitle').textContent = 'Login';
-            } else {
-                document.querySelector('.tab:last-child').classList.add('active');
-                document.getElementById('signupTab').classList.add('active');
-                document.getElementById('authModalTitle').textContent = 'Sign Up';
-            }
-        }
-        
-        async function login() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!username || !password) {
-                alert('Please enter both username and password');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/api/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    currentUser = {
-                        user_id: data.user_id,
-                        username: username,
-                        profile_image: data.profile_image,
-                        about: data.about
-                    };
-                    
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    hideAuthModal();
-                    loadContacts();
-                    startMessagePolling();
-                    
-                    // Check if admin
-                    if (username === "Ryuk") {
-                        isAdmin = true;
-                    }
-                } else {
-                    alert('Login failed: ' + data.error);
-                }
-            } catch (error) {
-                alert('Error logging in: ' + error.message);
-            }
-        }
-        
-        async function signup() {
-            const username = document.getElementById('signupUsername').value;
-            const password = document.getElementById('signupPassword').value;
-            const profile_image = document.getElementById('signupProfileImage').value;
-            const about = document.getElementById('signupAbout').value;
-            
-            if (!username || !password) {
-                alert('Please enter both username and password');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/api/signup`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password, profile_image, about })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('Sign up successful! Please login with your credentials.');
-                    switchAuthTab('login');
-                    document.getElementById('loginUsername').value = username;
-                    document.getElementById('loginPassword').value = '';
-                } else {
-                    alert('Sign up failed: ' + data.error);
-                }
-            } catch (error) {
-                alert('Error signing up: ' + error.message);
-            }
-        }
-        
-        function logout() {
-            currentUser = null;
-            currentChat = null;
-            contacts = [];
-            messages = {};
-            localStorage.removeItem('currentUser');
-            document.getElementById('contactsList').innerHTML = '';
-            document.getElementById('chatMessages').innerHTML = '<div class="empty-state">Select a chat to start messaging</div>';
-            document.getElementById('currentChatName').textContent = 'Select a chat';
-            showAuthModal();
-        }
-        
-        // Contact and message functions
-        async function loadContacts() {
-            try {
-                // In a real app, we would fetch the user's contacts from the server
-                // For this demo, we'll simulate loading contacts
-                const response = await fetch(`${SERVER_URL}/api/admin/users`, {
-                    method: 'GET'
-                });
-                
-                if (response.ok) {
-                    const users = await response.json();
-                    // Filter out current user
-                    contacts = users.filter(user => user.user_id !== currentUser.user_id);
-                    renderContacts();
-                } else {
-                    console.error('Failed to load users');
-                }
-            } catch (error) {
-                console.error('Error loading contacts:', error);
-            }
-        }
-        
-        function renderContacts() {
-            const contactsList = document.getElementById('contactsList');
-            contactsList.innerHTML = '';
-            
-            if (contacts.length === 0) {
-                contactsList.innerHTML = '<div class="empty-state">No contacts found</div>';
-                return;
-            }
-            
-            contacts.forEach(contact => {
-                const contactEl = document.createElement('div');
-                contactEl.className = 'contact';
-                contactEl.onclick = () => openChat(contact);
-                
-                if (currentChat && contact.user_id === currentChat.user_id) {
-                    contactEl.classList.add('active');
-                }
-                
-                const avatar = document.createElement('div');
-                avatar.className = 'contact-avatar';
-                if (contact.profile_image) {
-                    avatar.style.backgroundImage = `url(${contact.profile_image})`;
-                    avatar.style.backgroundSize = 'cover';
-                } else {
-                    avatar.textContent = contact.username.charAt(0).toUpperCase();
-                }
-                
-                const info = document.createElement('div');
-                info.className = 'contact-info';
-                
-                const name = document.createElement('div');
-                name.className = 'contact-name';
-                name.textContent = contact.username;
-                
-                const preview = document.createElement('div');
-                preview.className = 'contact-preview';
-                preview.textContent = contact.about || 'No status';
-                
-                info.appendChild(name);
-                info.appendChild(preview);
-                
-                contactEl.appendChild(avatar);
-                contactEl.appendChild(info);
-                
-                contactsList.appendChild(contactEl);
-            });
-        }
-        
-        function openChat(contact) {
-            currentChat = contact;
-            document.getElementById('currentChatName').textContent = contact.username;
-            
-            // Update active contact in sidebar
-            document.querySelectorAll('.contact').forEach(c => c.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            
-            // Load messages for this chat
-            loadMessages();
-            
-            // On mobile, show chat view and hide contacts
-            if (window.innerWidth <= 768) {
-                document.querySelector('.sidebar').classList.remove('active');
-                document.querySelector('.chat-container').classList.add('active');
-                document.querySelector('.back-button').style.display = 'block';
-            }
-        }
-        
-        function goBack() {
-            // On mobile, show contacts and hide chat
-            if (window.innerWidth <= 768) {
-                document.querySelector('.sidebar').classList.add('active');
-                document.querySelector('.chat-container').classList.remove('active');
-                document.querySelector('.back-button').style.display = 'none';
-            }
-        }
-        
-        async function loadMessages() {
-            if (!currentChat || !currentUser) return;
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/api/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUser.user_id,
-                        friend_id: currentChat.user_id
-                    })
-                });
-                
-                if (response.ok) {
-                    const messagesData = await response.json();
-                    messages[currentChat.user_id] = messagesData;
-                    renderMessages();
-                } else {
-                    console.error('Failed to load messages');
-                }
-            } catch (error) {
-                console.error('Error loading messages:', error);
-            }
-        }
-        
-        function renderMessages() {
-            const chatMessages = document.getElementById('chatMessages');
-            chatMessages.innerHTML = '';
-            
-            if (!currentChat || !messages[currentChat.user_id] || messages[currentChat.user_id].length === 0) {
-                chatMessages.innerHTML = '<div class="empty-state">No messages yet</div>';
-                return;
-            }
-            
-            messages[currentChat.user_id].forEach(message => {
-                const messageEl = document.createElement('div');
-                const isOutgoing = message.sender_id === currentUser.user_id;
-                messageEl.className = `message ${isOutgoing ? 'message-out' : 'message-in'}`;
-                
-                // Show sender and receiver information
-                const senderInfo = document.createElement('div');
-                senderInfo.className = 'message-sender';
-                senderInfo.textContent = `${message.sender_username} → ${findUsername(message.receiver_id)}`;
-                messageEl.appendChild(senderInfo);
-                
-                const text = document.createElement('div');
-                text.className = 'message-text';
-                text.textContent = message.message;
-                messageEl.appendChild(text);
-                
-                const time = document.createElement('div');
-                time.className = 'message-time';
-                time.textContent = formatMessageTime(message.timestamp);
-                messageEl.appendChild(time);
-                
-                chatMessages.appendChild(messageEl);
-            });
-            
-            // Scroll to bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        function findUsername(user_id) {
-            if (currentUser && user_id === currentUser.user_id) return currentUser.username;
-            const contact = contacts.find(c => c.user_id === user_id);
-            return contact ? contact.username : user_id;
-        }
-        
-        function formatMessageTime(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        async function sendMessage() {
-            if (!currentChat || !currentUser) {
-                alert('Please select a chat first');
-                return;
-            }
-            
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
-            
-            if (!message) return;
-            
-            try {
-                // First add the friend if not already added
-                await fetch(`${SERVER_URL}/api/add_friend`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUser.user_id,
-                        friend_id: currentChat.user_id
-                    })
-                });
-                
-                // Then send the message
-                const response = await fetch(`${SERVER_URL}/api/send_message`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sender_id: currentUser.user_id,
-                        receiver_id: currentChat.user_id,
-                        message: message
-                    })
-                });
-                
-                if (response.ok) {
-                    // Clear input
-                    messageInput.value = '';
-                    
-                    // Reload messages to show the new one
-                    loadMessages();
-                } else {
-                    console.error('Failed to send message');
-                    alert('Failed to send message. You may need to add this user as a friend first.');
-                }
-            } catch (error) {
-                console.error('Error sending message:', error);
-                alert('Error sending message: ' + error.message);
-            }
-        }
-        
-        function startMessagePolling() {
-            // Poll for new messages every 5 seconds
-            setInterval(() => {
-                if (currentChat) {
-                    loadMessages();
-                }
-            }, 5000);
-        }
-        
-        // Settings functions
-        function showSettingsModal() {
-            if (!currentUser) return;
-            
-            // Populate current values
-            document.getElementById('settingsProfileImage').value = currentUser.profile_image || '';
-            document.getElementById('settingsAbout').value = currentUser.about || '';
-            
-            // Set avatar
-            const avatarEl = document.getElementById('settingsAvatar');
-            if (currentUser.profile_image) {
-                avatarEl.style.backgroundImage = `url(${currentUser.profile_image})`;
-                avatarEl.style.backgroundSize = 'cover';
-                avatarEl.textContent = '';
-            } else {
-                avatarEl.style.backgroundImage = 'none';
-                avatarEl.textContent = currentUser.username.charAt(0).toUpperCase();
-            }
-            
-            // Show admin section if user is admin
-            if (isAdmin) {
-                document.getElementById('adminSection').classList.remove('hidden');
-                loadAdminUsers();
-                loadAllMessages();
-            } else {
-                document.getElementById('adminSection').classList.add('hidden');
-            }
-            
-            document.getElementById('settingsModal').classList.remove('hidden');
-        }
-        
-        function hideSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
-        }
-        
-        async function updateProfile() {
-            const profile_image = document.getElementById('settingsProfileImage').value;
-            const about = document.getElementById('settingsAbout').value;
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/api/update_profile`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUser.user_id,
-                        profile_image: profile_image,
-                        about: about
-                    })
-                });
-                
-                if (response.ok) {
-                    // Update current user data
-                    currentUser.profile_image = profile_image;
-                    currentUser.about = about;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    
-                    alert('Profile updated successfully!');
-                    hideSettingsModal();
-                } else {
-                    alert('Failed to update profile');
-                }
-            } catch (error) {
-                alert('Error updating profile: ' + error.message);
-            }
-        }
-        
-        // Admin functions
-        function switchAdminTab(tab) {
-            document.querySelectorAll('.admin-section .tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.admin-section .tab-content').forEach(t => t.classList.remove('active'));
-            
-            if (tab === 'users') {
-                document.querySelector('.admin-section .tab:first-child').classList.add('active');
-                document.getElementById('adminUsersTab').classList.add('active');
-            } else if (tab === 'messages') {
-                document.querySelectorAll('.admin-section .tab')[1].classList.add('active');
-                document.getElementById('adminMessagesTab').classList.add('active');
-            } else {
-                document.querySelector('.admin-section .tab:last-child').classList.add('active');
-                document.getElementById('adminBanTab').classList.add('active');
-            }
-        }
-        
-        async function loadAdminUsers() {
-            if (!isAdmin) return;
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/api/admin/users`);
-                if (response.ok) {
-                    const users = await response.json();
-                    const usersList = document.getElementById('adminUsersList');
-                    usersList.innerHTML = '';
-                    
-                    users.forEach(user => {
-                        const row = document.createElement('tr');
-                        
-                        const usernameCell = document.createElement('td');
-                        usernameCell.textContent = user.username;
-                        
-                        const ipCell = document.createElement('td');
-                        ipCell.textContent = user.ip;
-                        
-                        const actionCell = document.createElement('td');
-                        const banButton = document.createElement('button');
-                        banButton.textContent = 'Ban IP';
-                        banButton.className = 'admin-button';
-                        banButton.onclick = () => {
-                            document.getElementById('banIP').value = user.ip;
-                            switchAdminTab('ban');
-                        };
-                        actionCell.appendChild(banButton);
-                        
-                        row.appendChild(usernameCell);
-                        row.appendChild(ipCell);
-                        row.appendChild(actionCell);
-                        
-                        usersList.appendChild(row);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading admin users:', error);
-            }
-        }
-        
-        async function loadAllMessages() {
-            if (!isAdmin) return;
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/api/admin/all_messages`);
-                if (response.ok) {
-                    const allMessages = await response.json();
-                    const messagesList = document.getElementById('adminMessagesList');
-                    messagesList.innerHTML = '';
-                    
-                    if (allMessages.length === 0) {
-                        messagesList.innerHTML = '<div class="empty-state">No messages found</div>';
-                        return;
-                    }
-                    
-                    allMessages.forEach(message => {
-                        const messageEl = document.createElement('div');
-                        messageEl.className = 'message';
-                        messageEl.style.margin = '10px 0';
-                        messageEl.style.padding = '10px';
-                        messageEl.style.border = '1px solid var(--border-color)';
-                        messageEl.style.borderRadius = '8px';
-                        
-                        const sender = document.createElement('div');
-                        sender.textContent = `From: ${findUsername(message.sender_id)} To: ${findUsername(message.receiver_id)}`;
-                        sender.style.fontWeight = 'bold';
-                        sender.style.marginBottom = '5px';
-                        
-                        const content = document.createElement('div');
-                        content.textContent = message.message;
-                        content.style.margin = '5px 0';
-                        
-                        const time = document.createElement('div');
-                        time.textContent = new Date(message.timestamp).toLocaleString();
-                        time.style.fontSize = '0.8em';
-                        time.style.color = '#a0a0a0';
-                        
-                        messageEl.appendChild(sender);
-                        messageEl.appendChild(content);
-                        messageEl.appendChild(time);
-                        
-                        messagesList.appendChild(messageEl);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading all messages:', error);
-            }
-        }
-        
-        async function banIP() {
-            if (!isAdmin) return;
-            
-            const ip = document.getElementById('banIP').value;
-            const reason = document.getElementById('banReason').value;
-            
-            if (!ip) {
-                alert('Please enter an IP address');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/api/admin/ban_ip`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ ip, reason })
-                });
-                
-                if (response.ok) {
-                    alert('IP banned successfully');
-                    document.getElementById('banIP').value = '';
-                    document.getElementById('banReason').value = '';
-                } else {
-                    alert('Failed to ban IP');
-                }
-            } catch (error) {
-                alert('Error banning IP: ' + error.message);
-            }
-        }
-        
-        // Event listeners
-        document.getElementById('messageInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const contactElements = document.querySelectorAll('.contact');
-            
-            contactElements.forEach(contact => {
-                const name = contact.querySelector('.contact-name').textContent.toLowerCase();
-                const preview = contact.querySelector('.contact-preview').textContent.toLowerCase();
-                
-                if (name.includes(searchTerm) || preview.includes(searchTerm)) {
-                    contact.style.display = 'flex';
-                } else {
-                    contact.style.display = 'none';
-                }
-            });
-        });
-        
-        // Initialize the app
-        init();
-    </script>
+<div id="adminMessagesTab" class="tab-content"><div id="adminMessagesList" class="admin-panel"></div></div>
+
+<div id="adminBanTab" class="tab-content">
+<div class="form-group">
+<label class="form-label" for="banIP">IP Address</label>
+<input type="text" id="banIP" class="form-input" placeholder="Enter IP to ban/unban">
+</div>
+<div class="form-group">
+<label class="form-label" for="banReason">Reason (optional)</label>
+<input type="text" id="banReason" class="form-input" placeholder="Reason for ban">
+</div>
+<div class="form-buttons" style="display:flex; gap:10px;">
+<button class="form-button" onclick="banIP()">Ban IP</button>
+<button class="form-button secondary-button" onclick="unbanIP()">Unban IP</button>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- Main Interface -->
+<div class="header">
+<div class="logo">SHSSS Chat</div>
+<div class="header-actions">
+<button class="header-button" onclick="showSettingsModal()">⚙️</button>
+</div>
+</div>
+
+<div class="container">
+<div class="sidebar">
+<div class="search-container">
+<input type="text" class="search-input" placeholder="Search contacts">
+</div>
+<div class="contacts-list" id="contactsList">
+<div class="empty-state">No contacts yet.</div>
+</div>
+</div>
+<div class="chat-container">
+<div class="chat-header" id="chatHeader">Select a contact</div>
+<div class="chat-messages" id="chatMessages"></div>
+<div class="chat-input-container">
+<input type="text" class="chat-input" id="chatInput" placeholder="Type a message">
+<button class="send-button" onclick="sendMessage()">➤</button>
+</div>
+</div>
+</div>
+
+<script>
+// --- Auth Modal ---
+function showAuthModal(){document.getElementById('authModal').classList.remove('hidden');}
+function hideAuthModal(){document.getElementById('authModal').classList.add('hidden');}
+function switchAuthTab(tab){document.querySelectorAll('#authModal .tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('#authModal .tab-content').forEach(c=>c.classList.remove('active'));document.querySelector('#authModal .tab[onclick*="'+tab+'"]').classList.add('active');document.getElementById(tab+'Tab').classList.add('active');}
+function showSettingsModal(){document.getElementById('settingsModal').classList.remove('hidden');}
+function hideSettingsModal(){document.getElementById('settingsModal').classList.add('hidden');}
+function switchAdminTab(tab){document.querySelectorAll('#adminSection .tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('#adminSection .tab-content').forEach(c=>c.classList.remove('active'));document.querySelector('#adminSection .tab[onclick*="'+tab+'"]').classList.add('active');document.getElementById('admin'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Tab').classList.add('active');}
+
+// --- Placeholder JS for login/signup ---
+function login(){
+    const user=document.getElementById('loginUsername').value;
+    const pass=document.getElementById('loginPassword').value;
+    if(!user||!pass){document.getElementById('loginError').innerText="Enter username and password";return;}
+    fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})})
+    .then(r=>r.json()).then(res=>{
+        if(res.success){hideAuthModal();alert('Logged in!');}
+        else{document.getElementById('loginError').innerText=res.reason||'Login failed';}
+    });
+}
+function signup(){alert('Sign up placeholder');}
+function updateProfile(){alert('Update profile placeholder');}
+function sendMessage(){alert('Send message placeholder');}
+
+// --- Admin Ban/Unban ---
+function banIP(){const ip=document.getElementById('banIP').value;const reason=document.getElementById('banReason').value;fetch('/api/admin/ban_ip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip,reason})}).then(r=>r.json()).then(res=>alert(res.message||'IP banned')); }
+function unbanIP(){const ip=document.getElementById('banIP').value;fetch('/api/admin/unban_ip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip})}).then(r=>r.json()).then(res=>alert(res.message||'IP unbanned')); }
+
+</script>
 </body>
 </html>
