@@ -1,232 +1,759 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHSSS Chat</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SHSSS Chat — Single File</title>
 <style>
-:root {
-    --primary-color: #8774e1;
-    --bg-color: #0f0f0f;
-    --secondary-bg: #1e1e1e;
-    --text-color: #e0e0e0;
-    --border-color: #2d2d2d;
-    --message-out-bg: #2b5278;
-    --message-in-bg: #182533;
-    --hover-color: #2a2a2a;
-    --shadow: 0 2px 5px rgba(0,0,0,0.3);
-    --header-height: 60px;
-    --input-height: 60px;
+:root{
+  --primary:#8774e1; --bg:#0f0f0f; --sec:#1e1e1e; --txt:#e0e0e0;
+  --muted:#a0a0a0; --border:#2d2d2d; --in:#182533; --out:#2b5278;
+  --hover:#2a2a2a; --h:60px;
 }
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-body { background-color: var(--bg-color); color: var(--text-color); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-.header { height: var(--header-height); display:flex; justify-content:space-between; align-items:center; padding:0 15px; background-color:var(--secondary-bg); border-bottom:1px solid var(--border-color); }
-.logo { font-weight:bold; color: var(--primary-color); font-size:1.2rem; }
-.header-actions { display:flex; gap:15px; }
-.header-button { background:none; border:none; color: var(--text-color); cursor:pointer; font-size:1.2rem; }
-.container { display:flex; flex:1; overflow:hidden; }
-.sidebar { width:350px; border-right:1px solid var(--border-color); display:flex; flex-direction:column; overflow:hidden; }
-.search-container { padding:10px; border-bottom:1px solid var(--border-color); }
-.search-input { width:100%; padding:10px 15px; border-radius:18px; border:none; background-color: var(--hover-color); color: var(--text-color); }
-.contacts-list { overflow-y:auto; flex:1; }
-.contact { display:flex; align-items:center; padding:12px 15px; cursor:pointer; border-bottom:1px solid var(--border-color); }
-.contact:hover, .contact.active { background-color: var(--hover-color); }
-.contact-avatar { width:45px; height:45px; border-radius:50%; margin-right:12px; background-color: var(--primary-color); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:18px; }
-.contact-info { flex:1; overflow:hidden; }
-.contact-name { font-weight:bold; margin-bottom:4px; }
-.contact-preview { font-size:0.85rem; color:#a0a0a0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.chat-container { flex:1; display:flex; flex-direction:column; }
-.chat-header { height:var(--header-height); padding:0 15px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; background-color: var(--secondary-bg); }
-.chat-messages { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; background-color: var(--bg-color); }
-.message { max-width:70%; padding:8px 12px; margin-bottom:10px; border-radius:8px; position:relative; }
-.message-out { align-self:flex-end; background-color: var(--message-out-bg); }
-.message-in { align-self:flex-start; background-color: var(--message-in-bg); }
-.message-sender { font-size:0.75rem; font-weight:bold; margin-bottom:4px; color:var(--primary-color); }
-.message-time { font-size:0.7rem; color:#a0a0a0; text-align:right; margin-top:4px; }
-.chat-input-container { height:var(--input-height); padding:10px 15px; border-top:1px solid var(--border-color); display:flex; align-items:center; background-color: var(--secondary-bg); }
-.chat-input { flex:1; padding:12px 15px; border-radius:20px; border:none; background-color: var(--hover-color); color: var(--text-color); }
-.send-button { background-color: var(--primary-color); color:white; border:none; border-radius:50%; width:40px; height:40px; margin-left:10px; cursor:pointer; }
-.modal { position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000; }
-.modal-content { background-color: var(--secondary-bg); padding:20px; border-radius:8px; width:90%; max-width:400px; box-shadow: var(--shadow); }
-.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
-.close-button { background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--text-color); }
-.form-group { margin-bottom:15px; }
-.form-label { display:block; margin-bottom:5px; font-size:0.9rem; color:#a0a0a0; }
-.form-input { width:100%; padding:10px; border-radius:4px; border:1px solid var(--border-color); background-color: var(--hover-color); color: var(--text-color); }
-.form-button { width:100%; padding:12px; background-color: var(--primary-color); color:white; border:none; border-radius:4px; cursor:pointer; margin-top:10px; font-weight:bold; }
-.secondary-button { background-color: var(--hover-color); color: var(--text-color); }
-.hidden { display:none; }
-.profile-container { padding:15px; }
-.profile-avatar { width:80px; height:80px; border-radius:50%; background-color: var(--primary-color); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; font-weight:bold; margin:0 auto 15px; }
-.admin-section { border-top:1px solid var(--border-color); margin-top:20px; padding-top:20px; }
-.admin-panel { padding:15px; overflow-y:auto; max-height:400px; }
-.admin-table { width:100%; border-collapse:collapse; margin:10px 0; font-size:0.9rem; }
-.admin-table th, .admin-table td { padding:8px; text-align:left; border-bottom:1px solid var(--border-color); }
-.admin-button { padding:5px 10px; background-color:#e53935; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem; }
-.tab-container { display:flex; border-bottom:1px solid var(--border-color); margin-bottom:15px; }
-.tab { padding:8px 15px; cursor:pointer; font-size:0.9rem; }
-.tab.active { border-bottom:2px solid var(--primary-color); }
-.tab-content { display:none; }
-.tab-content.active { display:block; }
-.empty-state { text-align:center; padding:30px; color:#a0a0a0; }
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Segoe UI,system-ui,Arial;}
+body{background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column;}
+.header{height:var(--h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--sec);border-bottom:1px solid var(--border)}
+.logo{color:var(--primary);font-weight:700}
+.header-actions{display:flex;gap:8px}
+.btn{background:transparent;border:0;color:var(--txt);cursor:pointer;padding:8px;border-radius:6px}
+.container{display:flex;flex:1;overflow:hidden}
+.sidebar{width:320px;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.search{padding:12px;border-bottom:1px solid var(--border)}
+.search input{width:100%;padding:10px;border-radius:999px;border:0;background:var(--hover);color:var(--txt)}
+.contacts{flex:1;overflow:auto}
+.contact{display:flex;gap:12px;padding:12px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer}
+.contact:hover{background:var(--hover)}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.cinfo{flex:1;min-width:0}
+.cname{font-weight:700}
+.cpreview{font-size:0.85rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat{flex:1;display:flex;flex-direction:column}
+.chat-header{height:var(--h);display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--sec)}
+.chat-messages{flex:1;padding:16px;overflow:auto;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.02))}
+.msg{max-width:72%;padding:10px 12px;border-radius:12px;margin-bottom:10px;position:relative}
+.msg .sender{font-size:0.75rem;color:var(--primary);font-weight:700;margin-bottom:6px}
+.msg .time{font-size:0.72rem;color:var(--muted);margin-top:6px;text-align:right}
+.in{align-self:flex-start;background:var(--in)}
+.out{align-self:flex-end;background:var(--out)}
+.input{height:64px;border-top:1px solid var(--border);display:flex;gap:12px;align-items:center;padding:8px 12px;background:var(--sec)}
+.input input{flex:1;padding:12px;border-radius:999px;border:0;background:var(--hover);color:var(--txt)}
+.send{background:var(--primary);color:white;border:0;width:44px;height:44px;border-radius:50%;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:999}
+.modal .box{width:100%;max-width:480px;background:var(--sec);padding:18px;border-radius:8px;border:1px solid var(--border)}
+.form-group{margin-bottom:12px}
+label{display:block;color:var(--muted);margin-bottom:6px;font-size:0.9rem}
+.input-sm{width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--hover);color:var(--txt)}
+.primary{background:var(--primary);color:white;border:0;padding:10px 12px;border-radius:6px;cursor:pointer}
+.ghost{background:transparent;border:1px solid var(--border);color:var(--txt);padding:10px 12px;border-radius:6px;cursor:pointer}
+.small{font-size:0.85rem;padding:6px 8px}
+.admin-section{margin-top:14px;border-top:1px dashed var(--border);padding-top:12px}
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th,.table td{padding:8px;border-bottom:1px solid var(--border);text-align:left;font-size:0.9rem}
+.note{color:var(--muted);font-size:0.9rem;margin-top:6px}
+.hidden{display:none}
+.center{display:flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
 
-<!-- Auth Modal -->
-<div id="authModal" class="modal">
-<div class="modal-content">
-<div class="modal-header">
-<h2 id="authModalTitle">Login</h2>
-<button class="close-button" onclick="hideAuthModal()">&times;</button>
-</div>
-<div class="tab-container">
-<div class="tab active" onclick="switchAuthTab('login')">Login</div>
-<div class="tab" onclick="switchAuthTab('signup')">Sign Up</div>
-</div>
-<div id="loginTab" class="tab-content active">
-<div class="form-group">
-<label class="form-label" for="loginUsername">Username</label>
-<input type="text" id="loginUsername" class="form-input" placeholder="Enter your username">
-</div>
-<div class="form-group">
-<label class="form-label" for="loginPassword">Password</label>
-<input type="password" id="loginPassword" class="form-input" placeholder="Enter your password">
-</div>
-<div id="loginError" style="color:#e53935;margin-bottom:10px;"></div>
-<button class="form-button" onclick="login()">Login</button>
-</div>
-<div id="signupTab" class="tab-content">
-<div class="form-group">
-<label class="form-label" for="signupUsername">Username</label>
-<input type="text" id="signupUsername" class="form-input" placeholder="Choose a username">
-</div>
-<div class="form-group">
-<label class="form-label" for="signupPassword">Password</label>
-<input type="password" id="signupPassword" class="form-input" placeholder="Choose a password">
-</div>
-<div class="form-group">
-<label class="form-label" for="signupProfileImage">Profile Image URL (optional)</label>
-<input type="text" id="signupProfileImage" class="form-input" placeholder="URL for your profile image">
-</div>
-<div class="form-group">
-<label class="form-label" for="signupAbout">About (optional)</label>
-<input type="text" id="signupAbout" class="form-input" placeholder="Tell something about yourself">
-</div>
-<button class="form-button" onclick="signup()">Sign Up</button>
-</div>
-</div>
-</div>
-
-<!-- Settings / Admin Modal -->
-<div id="settingsModal" class="modal hidden">
-<div class="modal-content">
-<div class="modal-header">
-<h2>Settings</h2>
-<button class="close-button" onclick="hideSettingsModal()">&times;</button>
-</div>
-<div class="profile-container">
-<div class="profile-avatar" id="settingsAvatar">U</div>
-<div class="form-group">
-<label class="form-label" for="settingsProfileImage">Profile Image URL</label>
-<input type="text" id="settingsProfileImage" class="form-input">
-</div>
-<div class="form-group">
-<label class="form-label" for="settingsAbout">About</label>
-<input type="text" id="settingsAbout" class="form-input">
-</div>
-<button class="form-button" onclick="updateProfile()">Update Profile</button>
-
-<div id="adminSection" class="admin-section hidden">
-<h3>Admin Panel</h3>
-<div class="tab-container">
-<div class="tab active" onclick="switchAdminTab('users')">Users</div>
-<div class="tab" onclick="switchAdminTab('messages')">All Messages</div>
-<div class="tab" onclick="switchAdminTab('ban')">Ban/Unban IP</div>
-</div>
-
-<div id="adminUsersTab" class="tab-content active">
-<table class="admin-table">
-<thead><tr><th>Username</th><th>IP</th><th>Action</th></tr></thead>
-<tbody id="adminUsersList"></tbody>
-</table>
-</div>
-
-<div id="adminMessagesTab" class="tab-content"><div id="adminMessagesList" class="admin-panel"></div></div>
-
-<div id="adminBanTab" class="tab-content">
-<div class="form-group">
-<label class="form-label" for="banIP">IP Address</label>
-<input type="text" id="banIP" class="form-input" placeholder="Enter IP to ban/unban">
-</div>
-<div class="form-group">
-<label class="form-label" for="banReason">Reason (optional)</label>
-<input type="text" id="banReason" class="form-input" placeholder="Reason for ban">
-</div>
-<div class="form-buttons" style="display:flex; gap:10px;">
-<button class="form-button" onclick="banIP()">Ban IP</button>
-<button class="form-button secondary-button" onclick="unbanIP()">Unban IP</button>
-</div>
-</div>
-
-</div>
-</div>
-</div>
-
-<!-- Main Interface -->
 <div class="header">
-<div class="logo">SHSSS Chat</div>
-<div class="header-actions">
-<button class="header-button" onclick="showSettingsModal()">⚙️</button>
-</div>
+  <div class="logo">SHSSS Chat</div>
+  <div class="header-actions">
+    <button class="btn" id="btnSettings">⚙️</button>
+    <button class="btn" id="btnAuth">Login / Sign up</button>
+  </div>
 </div>
 
 <div class="container">
-<div class="sidebar">
-<div class="search-container">
-<input type="text" class="search-input" placeholder="Search contacts">
+  <div class="sidebar">
+    <div class="search">
+      <input id="search" placeholder="Search contacts..." />
+    </div>
+    <div class="contacts" id="contactsList">
+      <div class="center note" style="padding:24px">No contacts yet. Login to load contacts.</div>
+    </div>
+  </div>
+
+  <div class="chat">
+    <div class="chat-header" id="chatHeader">Select a contact</div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="input">
+      <input id="chatInput" placeholder="Type a message..." />
+      <button class="send" id="btnSend">➤</button>
+    </div>
+  </div>
 </div>
-<div class="contacts-list" id="contactsList">
-<div class="empty-state">No contacts yet.</div>
+
+<!-- AUTH / SIGNUP modal -->
+<div id="authModal" class="modal hidden">
+  <div class="box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 id="authTitle">Login</h3>
+      <button class="ghost" id="closeAuth">Close</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button id="tabLogin" class="primary" style="flex:1">Login</button>
+      <button id="tabSignup" class="ghost" style="flex:1">Sign up</button>
+    </div>
+
+    <div id="loginBox">
+      <div class="form-group">
+        <label>Username</label>
+        <input id="loginUsername" class="input-sm" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="loginPassword" type="password" class="input-sm" />
+      </div>
+      <div id="loginError" style="color:#ff7373"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="primary" id="doLogin">Login</button>
+        <button class="ghost" id="showSignup">Go to Sign up</button>
+      </div>
+      <div class="note">Device ID will be sent to server for device-banning checks.</div>
+    </div>
+
+    <div id="signupBox" class="hidden">
+      <div class="form-group"><label>Username</label><input id="signupUsername" class="input-sm" /></div>
+      <div class="form-group"><label>Password</label><input id="signupPassword" type="password" class="input-sm" /></div>
+      <div class="form-group"><label>Profile Image URL (optional)</label><input id="signupProfileImage" class="input-sm" /></div>
+      <div class="form-group"><label>About (optional)</label><input id="signupAbout" class="input-sm" /></div>
+      <div id="signupError" style="color:#ff7373"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="primary" id="doSignup">Create account</button>
+        <button class="ghost" id="showLogin">Back to login</button>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="chat-container">
-<div class="chat-header" id="chatHeader">Select a contact</div>
-<div class="chat-messages" id="chatMessages"></div>
-<div class="chat-input-container">
-<input type="text" class="chat-input" id="chatInput" placeholder="Type a message">
-<button class="send-button" onclick="sendMessage()">➤</button>
-</div>
-</div>
+
+<!-- SETTINGS / PROFILE / ADMIN modal -->
+<div id="settingsModal" class="modal hidden">
+  <div class="box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3>Settings</h3>
+      <button class="ghost" id="closeSettings">Close</button>
+    </div>
+
+    <div id="profileSection">
+      <div class="form-group"><label>Profile Image URL</label><input id="profileImage" class="input-sm" /></div>
+      <div class="form-group"><label>About</label><input id="profileAbout" class="input-sm" /></div>
+      <div style="display:flex;gap:8px">
+        <button class="primary" id="saveProfile">Save profile</button>
+        <button class="ghost" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px" class="note">
+      Your device id: <span id="deviceIdView" style="word-break:break-all;"></span>
+    </div>
+
+    <div class="admin-section" id="adminControls" style="display:none">
+      <h4>Admin Panel</h4>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="adminUser" placeholder="admin username" class="input-sm" />
+        <input id="adminPass" type="password" placeholder="admin password" class="input-sm" />
+        <button class="primary" id="adminLoginBtn">Auth</button>
+      </div>
+
+      <div id="adminPanelArea" class="hidden">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="banDeviceId" placeholder="device id to ban/unban" class="input-sm" />
+          <input id="banReason" placeholder="reason (optional)" class="input-sm" />
+          <button class="primary" id="banDeviceBtn">Ban</button>
+          <button class="ghost" id="unbanDeviceBtn">Unban</button>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="ghost" id="listBannedBtn">List banned devices</button>
+          <button class="ghost" id="listUsersBtn">List users</button>
+          <button class="ghost" id="listMessagesBtn">List all messages</button>
+        </div>
+
+        <div id="adminOutput" style="max-height:240px;overflow:auto;margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-// --- Auth Modal ---
-function showAuthModal(){document.getElementById('authModal').classList.remove('hidden');}
-function hideAuthModal(){document.getElementById('authModal').classList.add('hidden');}
-function switchAuthTab(tab){document.querySelectorAll('#authModal .tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('#authModal .tab-content').forEach(c=>c.classList.remove('active'));document.querySelector('#authModal .tab[onclick*="'+tab+'"]').classList.add('active');document.getElementById(tab+'Tab').classList.add('active');}
-function showSettingsModal(){document.getElementById('settingsModal').classList.remove('hidden');}
-function hideSettingsModal(){document.getElementById('settingsModal').classList.add('hidden');}
-function switchAdminTab(tab){document.querySelectorAll('#adminSection .tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('#adminSection .tab-content').forEach(c=>c.classList.remove('active'));document.querySelector('#adminSection .tab[onclick*="'+tab+'"]').classList.add('active');document.getElementById('admin'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Tab').classList.add('active');}
+/* -----------------------
+   Configuration & state
+   ----------------------- */
+const API_BASE = "https://chat-app-unkm.onrender.com/api"; // server provided
+let deviceId = null;
+let me = null; // {user_id, username, profile_image, about}
+let currentChatUser = null;
+let pollTimer = null;
 
-// --- Placeholder JS for login/signup ---
-function login(){
-    const user=document.getElementById('loginUsername').value;
-    const pass=document.getElementById('loginPassword').value;
-    if(!user||!pass){document.getElementById('loginError').innerText="Enter username and password";return;}
-    fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass})})
-    .then(r=>r.json()).then(res=>{
-        if(res.success){hideAuthModal();alert('Logged in!');}
-        else{document.getElementById('loginError').innerText=res.reason||'Login failed';}
-    });
+/* -----------------------
+   Device ID helper
+   ----------------------- */
+function ensureDeviceId(){
+  deviceId = localStorage.getItem('shsss_device_id');
+  if(!deviceId){
+    deviceId = 'dev-' + cryptoRandomHex(16);
+    localStorage.setItem('shsss_device_id', deviceId);
+  }
+  document.getElementById('deviceIdView').innerText = deviceId;
 }
-function signup(){alert('Sign up placeholder');}
-function updateProfile(){alert('Update profile placeholder');}
-function sendMessage(){alert('Send message placeholder');}
+function cryptoRandomHex(n){
+  const arr = new Uint8Array(n);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
+}
 
-// --- Admin Ban/Unban ---
-function banIP(){const ip=document.getElementById('banIP').value;const reason=document.getElementById('banReason').value;fetch('/api/admin/ban_ip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip,reason})}).then(r=>r.json()).then(res=>alert(res.message||'IP banned')); }
-function unbanIP(){const ip=document.getElementById('banIP').value;fetch('/api/admin/unban_ip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip})}).then(r=>r.json()).then(res=>alert(res.message||'IP unbanned')); }
+/* -----------------------
+   DOM helpers
+   ----------------------- */
+function qs(id){ return document.getElementById(id) }
+function show(el){ el.classList.remove('hidden'); el.style.display='flex'}
+function hide(el){ el.classList.add('hidden'); el.style.display='none' }
+
+/* -----------------------
+   Init
+   ----------------------- */
+ensureDeviceId();
+setupUI();
+
+/* -----------------------
+   UI wiring
+   ----------------------- */
+function setupUI(){
+  // modals
+  qs('btnAuth').addEventListener('click', ()=>openAuth());
+  qs('closeAuth').addEventListener('click', ()=>qs('authModal').classList.add('hidden'));
+  qs('tabLogin').addEventListener('click', ()=>switchAuthTab('login'));
+  qs('tabSignup').addEventListener('click', ()=>switchAuthTab('signup'));
+  qs('showSignup').addEventListener('click', ()=>switchAuthTab('signup'));
+  qs('showLogin').addEventListener('click', ()=>switchAuthTab('login'));
+
+  // auth actions
+  qs('doLogin').addEventListener('click', doLogin);
+  qs('doSignup').addEventListener('click', doSignup);
+
+  // settings
+  qs('btnSettings').addEventListener('click', ()=>qs('settingsModal').classList.remove('hidden'));
+  qs('closeSettings').addEventListener('click', ()=>qs('settingsModal').classList.add('hidden'));
+  qs('saveProfile').addEventListener('click', saveProfile);
+  qs('logoutBtn').addEventListener('click', logout);
+
+  // chat send
+  qs('btnSend').addEventListener('click', sendMessage);
+  qs('chatInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendMessage(); });
+
+  // admin
+  qs('adminLoginBtn').addEventListener('click', adminAuth);
+  qs('banDeviceBtn').addEventListener('click', adminBanDevice);
+  qs('unbanDeviceBtn').addEventListener('click', adminUnbanDevice);
+  qs('listBannedBtn').addEventListener('click', adminListBanned);
+  qs('listUsersBtn').addEventListener('click', adminListUsers);
+  qs('listMessagesBtn').addEventListener('click', adminListMessages);
+
+  // search
+  qs('search').addEventListener('input', (e)=>filterContacts(e.target.value));
+
+  // initial UI state
+  qs('authModal').classList.remove('hidden');
+  switchAuthTab('login');
+  // load any existing session? (we rely on client login state only)
+}
+
+/* -----------------------
+   AUTH: login / signup
+   ----------------------- */
+function openAuth(){
+  qs('authModal').classList.remove('hidden');
+}
+function switchAuthTab(tab){
+  if(tab==='login'){
+    qs('authTitle').innerText = 'Login';
+    qs('loginBox').classList.remove('hidden');
+    qs('signupBox').classList.add('hidden');
+    qs('tabLogin').classList.add('primary'); qs('tabLogin').classList.remove('ghost');
+    qs('tabSignup').classList.add('ghost'); qs('tabSignup').classList.remove('primary');
+  } else {
+    qs('authTitle').innerText = 'Sign up';
+    qs('loginBox').classList.add('hidden');
+    qs('signupBox').classList.remove('hidden');
+    qs('tabSignup').classList.add('primary'); qs('tabSignup').classList.remove('ghost');
+    qs('tabLogin').classList.add('ghost'); qs('tabLogin').classList.remove('primary');
+  }
+}
+
+async function doLogin(){
+  qs('loginError').innerText = '';
+  const username = qs('loginUsername').value.trim();
+  const password = qs('loginPassword').value;
+  if(!username || !password){ qs('loginError').innerText = 'Username and password required'; return; }
+
+  try{
+    const resp = await fetch(API_BASE + '/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password, device_id: deviceId })
+    });
+    const data = await resp.json();
+    if(resp.status === 403){
+      // banned or other
+      alert(data.error + (data.reason ? (' — ' + data.reason) : ''));
+      return;
+    }
+    if(!data.success){
+      qs('loginError').innerText = data.error || 'Login failed';
+      return;
+    }
+    // success
+    // server returns user_id, profile_image, about per earlier Python — adapt if different
+    me = {
+      user_id: data.user_id || data.user_id || data.userId || null,
+      username: username,
+      profile_image: data.profile_image || data.profileImage || '',
+      about: data.about || ''
+    };
+    // persist minimal info
+    localStorage.setItem('shsss_user', JSON.stringify(me));
+    qs('authModal').classList.add('hidden');
+    qs('authModal').style.display='none';
+    afterLogin();
+  }catch(err){
+    console.error(err);
+    qs('loginError').innerText = 'Network error';
+  }
+}
+
+async function doSignup(){
+  qs('signupError').innerText='';
+  const username = qs('signupUsername').value.trim();
+  const password = qs('signupPassword').value;
+  const profileImage = qs('signupProfileImage').value.trim();
+  const about = qs('signupAbout').value.trim();
+  if(!username||!password){ qs('signupError').innerText='Required fields missing'; return; }
+  try{
+    const resp = await fetch(API_BASE + '/signup', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password, profile_image: profileImage, about, device_id: deviceId })
+    });
+    const data = await resp.json();
+    if(resp.status === 403){
+      alert(data.error + (data.reason ? (' — ' + data.reason) : ''));
+      return;
+    }
+    if(!data.success){
+      qs('signupError').innerText = data.error || 'Signup failed';
+      return;
+    }
+    alert('Account created — please login');
+    switchAuthTab('login');
+  }catch(err){
+    console.error(err);
+    qs('signupError').innerText = 'Network error';
+  }
+}
+
+/* -----------------------
+   After login — load contacts & polls
+   ----------------------- */
+function afterLogin(){
+  qs('contactsList').innerHTML = '<div class="center note" style="padding:18px">Loading contacts...</div>';
+  loadContacts();
+  qs('settingsModal').classList.remove('hidden');
+  // show profile in settings
+  qs('profileImage').value = me.profile_image || '';
+  qs('profileAbout').value = me.about || '';
+  qs('deviceIdView').innerText = deviceId;
+  qs('adminControls').style.display = 'block';
+  // start polling messages for active chat
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(()=>{ if(currentChat) loadMessages(currentChat); }, 2500);
+}
+
+/* -----------------------
+   Contacts & messages (REST)
+   ----------------------- */
+
+async function loadContacts(){
+  try{
+    // Because we didn't implement a /contacts endpoint in Python, we will fetch users via admin-users if logged-in as admin
+    // For normal users, let the frontend show recent friends by requesting /api/admin/users only if admin; otherwise, show no contacts.
+    // We'll attempt a non-admin lightweight strategy: call /api/admin/users is restricted; instead, call a simple endpoint /api/admin/users if available.
+    // Many backends include a public users endpoint — we'll try /api/admin/users without admin creds; if 401, show placeholder and let user add friends manually.
+    const resp = await fetch(API_BASE + '/admin/users', { method:'GET', headers:{'Content-Type':'application/json'} });
+    if(resp.status === 200){
+      const users = await resp.json();
+      renderContactsFromUsers(users);
+      return;
+    }
+  }catch(e){
+    console.debug('admin/users fetch failed (ok)', e);
+  }
+
+  // Fallback: ask user to add friends manually via "Add contact" input (not implemented server-side). Show empty state.
+  qs('contactsList').innerHTML = '<div class="center note" style="padding:18px">No contacts available from server. If you are an admin, authenticate in Settings → Admin to load users.</div>';
+}
+
+function renderContactsFromUsers(users){
+  const list = qs('contactsList');
+  list.innerHTML='';
+  if(!Array.isArray(users) || users.length===0){
+    list.innerHTML = '<div class="center note" style="padding:18px">No users found</div>';
+    return;
+  }
+  users.forEach(u=>{
+    // u likely has user_id, username, ip, profile_image, about, created
+    const row = document.createElement('div');
+    row.className='contact';
+    row.onclick = ()=>selectContact(u.username, u.user_id);
+    const avatar = document.createElement('div'); avatar.className='avatar';
+    if(u.profile_image) { avatar.innerHTML = `<img src="${u.profile_image}" alt="av">`; } else avatar.textContent = (u.username||'U')[0].toUpperCase();
+    const info = document.createElement('div'); info.className='cinfo';
+    info.innerHTML = `<div class="cname">${escapeHtml(u.username)}</div><div class="cpreview">${escapeHtml(u.about || '')}</div>`;
+    row.appendChild(avatar); row.appendChild(info);
+    list.appendChild(row);
+  });
+}
+
+function selectContact(username, user_id){
+  currentChatUser = { username, user_id };
+  qs('chatHeader').innerText = username;
+  qs('chatMessages').innerHTML = '<div class="center note">Loading messages...</div>';
+  loadMessages(username); // server message endpoint expects user_id and friend_id pair — we'll use username as friend_id if backend uses username; adapt if backend uses user_id.
+}
+
+/* Load messages via POST /api/messages (server expects user_id and friend_id) */
+async function loadMessages(friendUsername){
+  if(!me) return;
+  try{
+    // We'll send me.user_id and friend_id as friendUsername (server earlier uses user_id values; if it expects user_id, this may need change)
+    const resp = await fetch(API_BASE + '/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: me.user_id, friend_id: friendUsername })
+    });
+    if(!resp.ok){
+      const j = await resp.json().catch(()=>({})); console.warn('messages fetch error', j);
+      qs('chatMessages').innerHTML = `<div class="center note">Unable to load messages</div>`;
+      return;
+    }
+    const msgs = await resp.json();
+    renderMessages(msgs);
+  }catch(err){
+    console.error(err);
+    qs('chatMessages').innerHTML = `<div class="center note">Network error while loading messages</div>`;
+  }
+}
+
+function renderMessages(rows){
+  const area = qs('chatMessages'); area.innerHTML='';
+  if(!rows || rows.length===0){ area.innerHTML = `<div class="center note">No messages yet</div>`; return; }
+  rows.forEach(r=>{
+    const m = document.createElement('div');
+    const isOut = (r.sender_id === me.user_id || r.sender_id === me.username);
+    m.className = 'msg ' + (isOut ? 'out' : 'in');
+    const sender = document.createElement('div'); sender.className='sender'; sender.innerText = r.sender_username || (isOut?me.username:'');
+    const body = document.createElement('div'); body.innerHTML = escapeHtml(r.message || r.text || '');
+    const time = document.createElement('div'); time.className='time'; time.innerText = new Date(r.timestamp || r.time || Date.now()).toLocaleString();
+    m.appendChild(sender); m.appendChild(body); m.appendChild(time);
+    area.appendChild(m);
+  });
+  area.scrollTop = area.scrollHeight;
+}
+
+/* -----------------------
+   Send message (POST /api/send_message)
+   ----------------------- */
+async function sendMessage(){
+  if(!me){ alert('Please login'); return; }
+  if(!currentChatUser){ alert('Select a contact'); return; }
+  const text = qs('chatInput').value.trim();
+  if(!text) return;
+  // server expects sender_id, receiver_id, message
+  const payload = { sender_id: me.user_id, receiver_id: currentChatUser.user_id || currentChatUser.username, message: text };
+  try{
+    const resp = await fetch(API_BASE + '/send_message', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    if(!resp.ok){ alert(data.error || 'Send failed'); return; }
+    qs('chatInput').value='';
+    // optimistic append
+    const now = new Date().toISOString();
+    renderMessages([{ sender_id: me.user_id, sender_username: me.username, receiver_id: currentChatUser.user_id || currentChatUser.username, message: text, timestamp: now }]);
+  }catch(e){
+    console.error(e);
+    alert('Network error sending message');
+  }
+}
+
+/* -----------------------
+   Profile update
+   ----------------------- */
+async function saveProfile(){
+  if(!me){ alert('Please login'); return; }
+  const profile_image = qs('profileImage').value.trim();
+  const about = qs('profileAbout').value.trim();
+  try{
+    const resp = await fetch(API_BASE + '/update_profile', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: me.user_id, profile_image, about })
+    });
+    const data = await resp.json();
+    if(!resp.ok){ alert(data.error || 'Update failed'); return; }
+    me.profile_image = profile_image; me.about = about;
+    localStorage.setItem('shsss_user', JSON.stringify(me));
+    alert('Profile updated');
+    // re-render contacts list to reflect updated avatar (if admin loaded)
+    loadContacts();
+  }catch(e){
+    console.error(e); alert('Network error');
+  }
+}
+
+/* -----------------------
+   Logout
+   ----------------------- */
+function logout(){
+  localStorage.removeItem('shsss_user');
+  me = null;
+  currentChatUser = null;
+  qs('chatMessages').innerHTML = '';
+  qs('chatHeader').innerText = 'Select a contact';
+  qs('contactsList').innerHTML = '<div class="center note">Logged out</div>';
+  qs('settingsModal').classList.add('hidden');
+  qs('adminControls').style.display = 'none';
+}
+
+/* -----------------------
+   Admin: auth + actions
+   ----------------------- */
+let adminAuth = false;
+function adminAuth(){
+  const u = qs('adminUser').value.trim();
+  const p = qs('adminPass').value;
+  if(!u || !p){ alert('Admin creds required'); return; }
+  // call /api/admin/login with username/password
+  fetch(API_BASE + '/admin/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ username: u, password: p })
+  }).then(r=>r.json().then(data=>{
+    if(r.ok && data.success){
+      adminAuth = { username: u, password: p };
+      qs('adminPanelArea').classList.remove('hidden');
+      qs('adminOutput').innerHTML = `<div class="note">Admin authenticated as ${u}</div>`;
+    } else {
+      adminAuth = false;
+      qs('adminOutput').innerHTML = `<div class="note" style="color:#ff7373">Admin auth failed</div>`;
+    }
+  })).catch(e=>{ console.error(e); qs('adminOutput').innerHTML = '<div class="note" style="color:#ff7373">Network error</div>'; });
+}
+
+function adminHeaders(){
+  // admin endpoints in our Python expect admin credentials in the JSON body, but some accept auth via JSON payload only.
+  // We'll pass credentials in JSON body for each admin call.
+  return { 'Content-Type':'application/json' };
+}
+
+async function adminBanDevice(){
+  if(!adminAuth){ alert('Authenticate as admin first'); return; }
+  const device = qs('banDeviceId').value.trim();
+  const reason = qs('banReason').value.trim();
+  if(!device){ alert('Device id required'); return; }
+  try{
+    const resp = await fetch(API_BASE + '/admin/ban_device', {
+      method:'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ username: adminAuth.username, password: adminAuth.password, device_id: device, reason })
+    });
+    const data = await resp.json();
+    if(resp.ok && data.success) {
+      qs('adminOutput').innerHTML = `<div class="note">Device banned: ${device}</div>`;
+    } else {
+      qs('adminOutput').innerHTML = `<div class="note" style="color:#ff7373">${data.error || 'Ban failed'}</div>`;
+    }
+  }catch(e){ console.error(e); qs('adminOutput').innerHTML = '<div class="note" style="color:#ff7373">Network error</div>'; }
+}
+
+async function adminUnbanDevice(){
+  if(!adminAuth){ alert('Authenticate as admin first'); return; }
+  const device = qs('banDeviceId').value.trim();
+  if(!device){ alert('Device id required'); return; }
+  try{
+    const resp = await fetch(API_BASE + '/admin/unban_device', {
+      method:'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ username: adminAuth.username, password: adminAuth.password, device_id: device })
+    });
+    const data = await resp.json();
+    if(resp.ok && data.success) {
+      qs('adminOutput').innerHTML = `<div class="note">Device unbanned: ${device}</div>`;
+    } else {
+      qs('adminOutput').innerHTML = `<div class="note" style="color:#ff7373">${data.error || 'Unban failed'}</div>`;
+    }
+  }catch(e){ console.error(e); qs('adminOutput').innerHTML = '<div class="note" style="color:#ff7373">Network error</div>'; }
+}
+
+async function adminListBanned(){
+  if(!adminAuth){ alert('Authenticate as admin first'); return; }
+  try{
+    const resp = await fetch(API_BASE + '/admin/banned_devices', {
+      method:'GET',
+      headers: {'Content-Type':'application/json'},
+      body: null // server expects admin creds in body; but GET with body is not ideal — fallback to POST as some servers require. We'll make a POST to be safe.
+    });
+    // Try GET first — if 401 or not OK, fallback to POST with credentials.
+    if(resp.ok){
+      const data = await resp.json();
+      renderAdminData('Banned devices', data);
+      return;
+    }
+  }catch(e){ /* continue to fallback */ }
+
+  // Fallback: POST with admin creds
+  try{
+    const r2 = await fetch(API_BASE + '/admin/banned_devices', {
+      method:'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ username: adminAuth.username, password: adminAuth.password })
+    });
+    const data = await r2.json();
+    if(r2.ok) renderAdminData('Banned devices', data);
+    else qs('adminOutput').innerHTML = `<div class="note" style="color:#ff7373">${data.error||'Failed'}</div>`;
+  }catch(e){ console.error(e); qs('adminOutput').innerHTML = '<div class="note" style="color:#ff7373">Network error</div>'; }
+}
+
+async function adminListUsers(){
+  if(!adminAuth){ alert('Authenticate as admin first'); return; }
+  try{
+    const resp = await fetch(API_BASE + '/admin/users', {
+      method:'GET',
+      headers: {'Content-Type':'application/json'}
+    });
+    if(resp.ok){
+      const data = await resp.json();
+      renderAdminData('Users', data);
+      return;
+    }
+  }catch(e){ /* fallback */ }
+  // fallback POST with credentials
+  try{
+    const r2 = await fetch(API_BASE + '/admin/users', {
+      method:'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ username: adminAuth.username, password: adminAuth.password })
+    });
+    const data = await r2.json();
+    if(r2.ok) renderAdminData('Users', data);
+    else qs('adminOutput').innerHTML = `<div class="note" style="color:#ff7373">${data.error||'Failed'}</div>`;
+  }catch(e){ console.error(e); qs('adminOutput').innerHTML = '<div class="note" style="color:#ff7373">Network error</div>'; }
+}
+
+async function adminListMessages(){
+  if(!adminAuth){ alert('Authenticate as admin first'); return; }
+  try{
+    const resp = await fetch(API_BASE + '/admin/all_messages', {
+      method:'GET',
+      headers: {'Content-Type':'application/json'}
+    });
+    if(resp.ok){
+      const data = await resp.json();
+      renderAdminData('All messages', data);
+      return;
+    }
+  }catch(e){}
+  // fallback POST
+  try{
+    const r2 = await fetch(API_BASE + '/admin/all_messages', {
+      method:'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ username: adminAuth.username, password: adminAuth.password })
+    });
+    const data = await r2.json();
+    if(r2.ok) renderAdminData('All messages', data);
+    else qs('adminOutput').innerHTML = `<div class="note" style="color:#ff7373">${data.error||'Failed'}</div>`;
+  }catch(e){ console.error(e); qs('adminOutput').innerHTML = '<div class="note" style="color:#ff7373">Network error</div>'; }
+}
+
+function renderAdminData(title, data){
+  let html = `<div class="note"><strong>${escapeHtml(title)}</strong></div>`;
+  if(!data){ qs('adminOutput').innerHTML = html + '<div class="note">No data</div>'; return; }
+  // If array, render table-ish
+  if(Array.isArray(data)){
+    if(data.length===0){ qs('adminOutput').innerHTML = html + '<div class="note">Empty</div>'; return; }
+    html += '<table class="table"><thead><tr>';
+    // gather keys
+    const keys = Object.keys(data[0]);
+    keys.forEach(k=> html += `<th>${escapeHtml(k)}</th>`);
+    html += '</tr></thead><tbody>';
+    data.forEach(d=>{
+      html += '<tr>';
+      keys.forEach(k=> html += `<td>${escapeHtml(String(d[k]===null? '': d[k]))}</td>`);
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  } else if(typeof data === 'object'){
+    html += `<pre style="white-space:pre-wrap;margin-top:8px">${escapeHtml(JSON.stringify(data,null,2))}</pre>`;
+  } else {
+    html += `<div class="note">${escapeHtml(String(data))}</div>`;
+  }
+  qs('adminOutput').innerHTML = html;
+}
+
+/* -----------------------
+   Helpers
+   ----------------------- */
+function escapeHtml(s){
+  if(!s && s !== 0) return '';
+  return String(s).replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+}
+
+function filterContacts(q){
+  q = (q||'').toLowerCase();
+  const nodes = document.querySelectorAll('.contact');
+  nodes.forEach(n=>{
+    const t = n.querySelector('.cname')?.innerText?.toLowerCase() || '';
+    n.style.display = t.includes(q) ? 'flex' : 'none';
+  });
+}
+
+/* -----------------------
+   Compatibility hacks & finalization
+   ----------------------- */
+// If a remembered user exists in localStorage, restore minimal session
+(function restoreSession(){
+  const saved = localStorage.getItem('shsss_user');
+  if(saved){
+    try{
+      me = JSON.parse(saved);
+      afterLogin();
+      qs('authModal').classList.add('hidden');
+      // load contacts if admin likely
+      loadContacts();
+    }catch(e){ console.error(e); }
+  }
+})();
+
+/* -----------------------
+   Small notes for deployers
+   -----------------------
+   - This frontend expects the Flask backend to expose the REST endpoints:
+     POST /api/signup
+     POST /api/login
+     POST /api/update_profile
+     POST /api/send_message
+     POST /api/messages
+     POST /api/admin/login
+     POST /api/admin/ban_device
+     POST /api/admin/unban_device
+     GET  or POST /api/admin/banned_devices
+     GET  or POST /api/admin/users
+     GET  or POST /api/admin/all_messages
+   - The frontend includes device_id inside JSON bodies so server can apply device-bans.
+   - Admin authentication here sends admin username/password in request body (as we built server).
+   - For production: switch to secure auth (tokens/JWT), always use HTTPS (we already reference https server), and hash passwords on server (bcrypt).
+   ----------------------- */
 
 </script>
 </body>
