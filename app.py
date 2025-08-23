@@ -10,12 +10,20 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 CORS(app)
 
-ADMIN_USER = "Ryuk"
-ADMIN_PASS = "Thad226010"
+# Admins
+ADMINS = [
+    {"username": "Ryuk", "password": "Thad226010"},
+    {"username": "Führer", "password": "Thad226010"},
+    {"username": "Vanguard", "password": "Thad226010"}
+]
+
 MAX_MESSAGE_AGE_HOURS = 24
 
 # ----- PostgreSQL Connection -----
-DB_URL = os.getenv("DATABASE_URL", "postgresql://chat_site_4fon_user:kfBshweJq9ofZB9sN8YyadA2bL4gYU8X@dpg-d2kisk75r7bs73clfla0-a.oregon-postgres.render.com/chat_site_4fon")
+DB_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://chat_site_oy6p_user:12NqkSqjEkwS0b5vrzCqcY4MbCKG0Ldg@dpg-d2kjkkn5r7bs73cm6dgg-a.oregon-postgres.render.com/chat_site_oy6p"
+)
 
 def get_conn():
     return psycopg2.connect(DB_URL, sslmode="require")
@@ -31,7 +39,7 @@ def init_db():
             user_id TEXT UNIQUE,
             username TEXT,
             password TEXT,
-            ip TEXT,
+            device_id TEXT,
             profile_image TEXT,
             about TEXT,
             created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -55,11 +63,11 @@ def init_db():
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    # Banned IPs
+    # Banned devices
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS banned_ips (
+        CREATE TABLE IF NOT EXISTS banned_devices (
             id SERIAL PRIMARY KEY,
-            ip TEXT UNIQUE,
+            device_id TEXT UNIQUE,
             reason TEXT,
             banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -83,34 +91,35 @@ def cleanup_old_messages():
     cur.close()
     conn.close()
 
-def is_banned(ip):
+def is_banned(device_id):
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT id FROM banned_ips WHERE ip=%s", (ip,))
+    cur.execute("SELECT id FROM banned_devices WHERE device_id=%s", (device_id,))
     banned = cur.fetchone() is not None
     cur.close()
     conn.close()
     return banned
 
 # ----- Routes -----
-
 @app.route("/api/signup", methods=["POST"])
 def signup():
-    ip = request.remote_addr
-    if is_banned(ip):
-        return jsonify({"error": "You are banned"}), 403
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
+    device_id = data.get("device_id")
     profile_image = data.get("profile_image", "")
     about = data.get("about", "")
-    if not username or not password:
-        return jsonify({"error": "Username and password required"}), 400
+    if not username or not password or not device_id:
+        return jsonify({"error": "Username, password, and device ID required"}), 400
+    if is_banned(device_id):
+        return jsonify({"error": "This device is banned"}), 403
     user_id = generate_user_id()
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("INSERT INTO users (user_id, username, password, ip, profile_image, about) VALUES (%s, %s, %s, %s, %s, %s)",
-                (user_id, username, password, ip, profile_image, about))
+    cur.execute(
+        "INSERT INTO users (user_id, username, password, device_id, profile_image, about) VALUES (%s, %s, %s, %s, %s, %s)",
+        (user_id, username, password, device_id, profile_image, about)
+    )
     conn.commit()
     cur.close()
     conn.close()
@@ -118,17 +127,20 @@ def signup():
 
 @app.route("/api/login", methods=["POST"])
 def login():
-    ip = request.remote_addr
-    if is_banned(ip):
-        return jsonify({"error": "You are banned"}), 403
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
-    if not username or not password:
-        return jsonify({"error": "Missing username or password"}), 400
+    device_id = data.get("device_id")
+    if not username or not password or not device_id:
+        return jsonify({"error": "Missing username, password, or device ID"}), 400
+    if is_banned(device_id):
+        return jsonify({"error": "This device is banned"}), 403
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT user_id, profile_image, about FROM users WHERE username=%s AND password=%s", (username, password))
+    cur.execute(
+        "SELECT user_id, profile_image, about FROM users WHERE username=%s AND password=%s AND device_id=%s",
+        (username, password, device_id)
+    )
     row = cur.fetchone()
     cur.close()
     conn.close()
@@ -136,134 +148,41 @@ def login():
         return jsonify({"success": True, "user_id": row[0], "profile_image": row[1], "about": row[2]})
     return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route("/api/update_profile", methods=["POST"])
-def update_profile():
-    data = request.get_json()
-    user_id = data.get("user_id")
-    profile_image = data.get("profile_image")
-    about = data.get("about")
-    if not user_id:
-        return jsonify({"error": "User ID required"}), 400
-    conn = get_conn()
-    cur = conn.cursor()
-    if profile_image:
-        cur.execute("UPDATE users SET profile_image=%s WHERE user_id=%s", (profile_image, user_id))
-    if about:
-        cur.execute("UPDATE users SET about=%s WHERE user_id=%s", (about, user_id))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route("/api/add_friend", methods=["POST"])
-def add_friend():
-    data = request.get_json()
-    user_id = data.get("user_id")
-    friend_id = data.get("friend_id")
-    if not user_id or not friend_id:
-        return jsonify({"error": "Missing IDs"}), 400
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM friends WHERE user_id=%s AND friend_id=%s", (user_id, friend_id))
-    if not cur.fetchone():
-        cur.execute("INSERT INTO friends (user_id, friend_id) VALUES (%s, %s)", (user_id, friend_id))
-        cur.execute("INSERT INTO friends (user_id, friend_id) VALUES (%s, %s)", (friend_id, user_id))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route("/api/send_message", methods=["POST"])
-def send_message():
-    cleanup_old_messages()
-    data = request.get_json()
-    sender_id = data.get("sender_id")
-    receiver_id = data.get("receiver_id")
-    message = data.get("message")
-    if not sender_id or not receiver_id or not message:
-        return jsonify({"error": "Missing data"}), 400
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM friends WHERE user_id=%s AND friend_id=%s", (sender_id, receiver_id))
-    if not cur.fetchone():
-        return jsonify({"error": "Not friends"}), 403
-    cur.execute("INSERT INTO messages (sender_id, receiver_id, message) VALUES (%s, %s, %s)", (sender_id, receiver_id, message))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route("/api/messages", methods=["POST"])
-def get_messages():
-    cleanup_old_messages()
-    data = request.get_json()
-    user_id = data.get("user_id")
-    friend_id = data.get("friend_id")
-    if not user_id or not friend_id:
-        return jsonify({"error": "Missing data"}), 400
-    conn = get_conn()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cutoff = datetime.now() - timedelta(hours=MAX_MESSAGE_AGE_HOURS)
-    cur.execute("""
-        SELECT m.sender_id, u.username AS sender_username, m.receiver_id, m.message, m.timestamp
-        FROM messages m
-        JOIN users u ON m.sender_id = u.user_id
-        WHERE ((m.sender_id=%s AND m.receiver_id=%s) OR (m.sender_id=%s AND m.receiver_id=%s))
-        AND m.timestamp >= %s
-        ORDER BY m.timestamp ASC
-    """, (user_id, friend_id, friend_id, user_id, cutoff))
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    messages = [{"sender_id": r["sender_id"], "sender_username": r["sender_username"], "receiver_id": r["receiver_id"], "message": r["message"], "timestamp": r["timestamp"]} for r in rows]
-    return jsonify(messages)
-
-# ----- Admin -----
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
     data = request.get_json()
-    if data.get("username") == ADMIN_USER and data.get("password") == ADMIN_PASS:
-        return jsonify({"success": True})
+    for admin in ADMINS:
+        if data.get("username") == admin["username"] and data.get("password") == admin["password"]:
+            return jsonify({"success": True})
     return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route("/api/admin/users", methods=["GET"])
-def admin_users():
-    conn = get_conn()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("SELECT user_id, username, ip, profile_image, about, created FROM users")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    users = [dict(r) for r in rows]
-    return jsonify(users)
-
-@app.route("/api/admin/all_messages", methods=["GET"])
-def admin_all_messages():
-    cleanup_old_messages()
-    conn = get_conn()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""
-        SELECT m.sender_id, u.username AS sender_username, m.receiver_id, m.message, m.timestamp
-        FROM messages m
-        JOIN users u ON m.sender_id = u.user_id
-        ORDER BY m.timestamp ASC
-    """)
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    messages = [dict(r) for r in rows]
-    return jsonify(messages)
-
-@app.route("/api/admin/ban_ip", methods=["POST"])
-def admin_ban_ip():
+@app.route("/api/admin/ban_device", methods=["POST"])
+def admin_ban_device():
     data = request.get_json()
-    ip = data.get("ip")
+    device_id = data.get("device_id")
     reason = data.get("reason", "")
-    if not ip:
-        return jsonify({"error": "IP required"}), 400
+    if not device_id:
+        return jsonify({"error": "Device ID required"}), 400
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("INSERT INTO banned_ips (ip, reason) VALUES (%s, %s) ON CONFLICT (ip) DO NOTHING", (ip, reason))
+    cur.execute(
+        "INSERT INTO banned_devices (device_id, reason) VALUES (%s, %s) ON CONFLICT (device_id) DO NOTHING",
+        (device_id, reason)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route("/api/admin/unban_device", methods=["POST"])
+def admin_unban_device():
+    data = request.get_json()
+    device_id = data.get("device_id")
+    if not device_id:
+        return jsonify({"error": "Device ID required"}), 400
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM banned_devices WHERE device_id=%s", (device_id,))
     conn.commit()
     cur.close()
     conn.close()
